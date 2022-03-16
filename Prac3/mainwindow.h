@@ -76,7 +76,7 @@ private:
     LFilterDialog lFilterDialog;
     OperOrderDialog operOrderDialog;
     QTimer timer;
-    int aitor;
+
     VideoCapture *cap;
     ImgViewer *visorS, *visorD, *visorHistoS, *visorHistoD;
     Mat colorImage, grayImage, destColorImage, destGrayImage;
