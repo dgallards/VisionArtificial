@@ -188,254 +188,56 @@ void MainWindow::okButtonClicked()
 
 void MainWindow::realTimeChanges()
 {
+
+
+    cvtColor(colorImage, yuvColorImage, COLOR_RGB2YUV);
+    split(yuvColorImage, yuvChannels);
+
+    auxGrayImage=grayImage.clone();
+
     switch (ui->operationComboBox->currentIndex())
     {
     case 0: //pixelT
-        if(ui->colorButton->isChecked()){
-            int r1 = pixelTDialog.grayTransformW->item(0,0)->text().toInt();
-            int r2 = pixelTDialog.grayTransformW->item(1,0)->text().toInt();
-            int r3 = pixelTDialog.grayTransformW->item(2,0)->text().toInt();
-            int r4 = pixelTDialog.grayTransformW->item(3,0)->text().toInt();
-
-            int s1 = pixelTDialog.grayTransformW->item(0,1)->text().toInt();
-            int s2 = pixelTDialog.grayTransformW->item(1,1)->text().toInt();
-            int s3 = pixelTDialog.grayTransformW->item(2,1)->text().toInt();
-            int s4 = pixelTDialog.grayTransformW->item(3,1)->text().toInt();
-
-            std::vector<int> vectorR = {r1, r2, r3, r4};
-            std::vector<int> vectorS = {s1, s2, s3, s4};
-
-            std::vector<uchar>tablaWT(256);
-
-            //create the lookup table using the vectorD and vectorS
-            for (int i = 0; i<3 ; i++)
-            {
-                for (int r = vectorR[i] ; r < vectorR[i+1] ; r++)
-                {
-                    tablaWT[r] = ((r-vectorR[i])*(vectorS[i+1]-vectorS[i]))/(vectorR[i+1]-vectorR[i])+vectorS[i];
-                }
-            }
-
-            //covert the image to YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //split the image into its channels
-            std::vector<Mat> channels;
-            split(yuvImage, channels);
-            //apply the lookup table to the channel
-            LUT(channels[0], tablaWT, channels[0]);
-            //merge the channels
-            merge(channels, yuvImage);
-            //convert the image back to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-
-        }else{
-            int r1 = pixelTDialog.grayTransformW->item(0,0)->text().toInt();
-            int r2 = pixelTDialog.grayTransformW->item(1,0)->text().toInt();
-            int r3 = pixelTDialog.grayTransformW->item(2,0)->text().toInt();
-            int r4 = pixelTDialog.grayTransformW->item(3,0)->text().toInt();
-
-            int s1 = pixelTDialog.grayTransformW->item(0,1)->text().toInt();
-            int s2 = pixelTDialog.grayTransformW->item(1,1)->text().toInt();
-            int s3 = pixelTDialog.grayTransformW->item(2,1)->text().toInt();
-            int s4 = pixelTDialog.grayTransformW->item(3,1)->text().toInt();
-
-            std::vector<int> vectorR = {r1, r2, r3, r4};
-            std::vector<int> vectorS = {s1, s2, s3, s4};
-
-            std::vector<uchar>tablaWT(256);
-
-            //create the lookup table using the vectorD and vectorS
-            for (int i = 0; i<3 ; i++)
-            {
-                for (int r = vectorR[i] ; r < vectorR[i+1] ; r++)
-                {
-                    tablaWT[r] = ((r-vectorR[i])*(vectorS[i+1]-vectorS[i]))/(vectorR[i+1]-vectorR[i])+vectorS[i];
-                }
-            }
-            LUT(grayImage,tablaWT,destGrayImage);
-
-        }
-
+        pixelT();
         break;
     case 1: //thresholding
-        if (ui->colorButton->isChecked())
-        {
-            //convertir a YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separar los canales
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //aplicar thresholding
-            threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-            //unir los canales
-            merge(yuvChannels, yuvImage);
-            //convertir a RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            cv::threshold(grayImage, destGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-        }
-
+        threshold();
         break;
     case 2: //equalize
-        if (ui->colorButton->isChecked())
-        {
-            //convert image to YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //equalize histogram
-            equalizeHist(yuvChannels[0], yuvChannels[0]);
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            equalizeHist(grayImage, destGrayImage);
-        }
-
+        equalize();
         break;
     case 3: //gauusian blur
-        if (ui->colorButton->isChecked())
-        {
-            //convert image to YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //apply gaussian blur
-
-            //get value from qspinbox and set the kernel size
-            GaussianBlur(yuvChannels[0], yuvChannels[0], Size(ui->gaussWidthBox->value(), ui->gaussWidthBox->value()), 0, 0);
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            //apply gaussian blur to gray image
-            GaussianBlur(grayImage, destGrayImage, Size(ui->gaussWidthBox->value(), ui->gaussWidthBox->value()), 0, 0);
-        }
-
+        gaussianBlur();
         break;
     case 4: //median blur
-        if (ui->colorButton->isChecked())
-        {
-            //convert image to YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //apply median blur
-            medianBlur(yuvChannels[0], yuvChannels[0], ui->gaussWidthBox->value());
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            //apply median blur to gray image
-            medianBlur(grayImage, destGrayImage, ui->gaussWidthBox->value());
-        }
-
+        medianFilter();
         break;
     case 5: //linear filter
-        if (ui->colorButton->isChecked())
-        {
-            //convert image to YUV
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //apply linear filter
-            Mat kernel = (Mat_<float>(3, 3) << lFilterDialog.kernelWidget->item(0, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 2)->text().toFloat(),
-                          lFilterDialog.kernelWidget->item(1, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 2)->text().toFloat(),
-                          lFilterDialog.kernelWidget->item(2, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 2)->text().toFloat());
-            filter2D(yuvChannels[0], yuvChannels[0], -1, kernel);
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            //apply linear filter to gray image
-            Mat kernel = (Mat_<float>(3, 3) << lFilterDialog.kernelWidget->item(0, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 2)->text().toFloat(),
-                          lFilterDialog.kernelWidget->item(1, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 2)->text().toFloat(),
-                          lFilterDialog.kernelWidget->item(2, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 2)->text().toFloat());
-            filter2D(grayImage, destGrayImage, -1, kernel);
-        }
-
+        linearFilter();
         break;
     case 6: //dilate
-        //convert image to YUV
-        if (ui->colorButton->isChecked())
-        {
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            //apply threshold
-            threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-            //apply dilate
-            dilate(yuvChannels[0], yuvChannels[0], Mat());
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            //apply dilate to gray image
-            threshold(grayImage, destGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-            dilate(destGrayImage, destGrayImage, Mat());
-        }
-
+        dilate();
         break;
     case 7: //erode
-        //convert image to YUV
-        if (ui->colorButton->isChecked())
-        {
-            Mat yuvImage;
-            cvtColor(colorImage, yuvImage, COLOR_RGB2YUV);
-            //separate channels
-            std::vector<Mat> yuvChannels;
-            split(yuvImage, yuvChannels);
-            threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-            //apply erode
-            erode(yuvChannels[0], yuvChannels[0], Mat());
-            //merge channels
-            merge(yuvChannels, yuvImage);
-            //convert image to RGB
-            cvtColor(yuvImage, destColorImage, COLOR_YUV2RGB);
-        }
-        else
-        {
-            //apply erode to gray image
-            threshold(grayImage, destGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
-            erode(destGrayImage, destGrayImage, Mat());
-        }
-
+        erode();
         break;
     case 8: //apply sevral filters
-
+        applySeveral();
+        break;
+    case 9:
+        negative();
         break;
     default:
+
         break;
     }
+
+    merge(yuvChannels, yuvColorImage);
+    //convert the image back to RGB
+    cvtColor(yuvColorImage, destColorImage, COLOR_YUV2RGB);
+    destGrayImage = auxGrayImage;
+
+
 }
 
 void MainWindow::on_loadButton_clicked()
@@ -481,3 +283,188 @@ void MainWindow::on_saveButton_clicked()
         imwrite(fileName.toStdString(), imageToSave);
     }
 }
+
+void MainWindow::pixelT(){
+    int r1 = pixelTDialog.grayTransformW->item(0,0)->text().toInt();
+    int r2 = pixelTDialog.grayTransformW->item(1,0)->text().toInt();
+    int r3 = pixelTDialog.grayTransformW->item(2,0)->text().toInt();
+    int r4 = pixelTDialog.grayTransformW->item(3,0)->text().toInt();
+
+    int s1 = pixelTDialog.grayTransformW->item(0,1)->text().toInt();
+    int s2 = pixelTDialog.grayTransformW->item(1,1)->text().toInt();
+    int s3 = pixelTDialog.grayTransformW->item(2,1)->text().toInt();
+    int s4 = pixelTDialog.grayTransformW->item(3,1)->text().toInt();
+
+    std::vector<int> vectorR = {r1, r2, r3, r4};
+    std::vector<int> vectorS = {s1, s2, s3, s4};
+
+    std::vector<uchar>tablaWT(256);
+
+    //create the lookup table using the vectorD and vectorS
+    for (int i = 0; i<3 ; i++)
+    {
+        for (int r = vectorR[i] ; r <= vectorR[i+1] ; r++)
+        {
+            tablaWT[r] = ((r-vectorR[i])*(vectorS[i+1]-vectorS[i]))/(vectorR[i+1]-vectorR[i])+vectorS[i];
+        }
+    }
+
+    if(ui->colorButton->isChecked()){
+        LUT(yuvChannels[0], tablaWT, yuvChannels[0]);
+    }else{
+        LUT(auxGrayImage,tablaWT,auxGrayImage);
+    }
+
+
+}
+void MainWindow::threshold(){
+    if (ui->colorButton->isChecked())
+    {
+        cv::threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+    }
+    else
+    {
+        cv::threshold(auxGrayImage, auxGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+    }
+}
+
+void MainWindow::equalize(){
+    if (ui->colorButton->isChecked())
+    {
+        equalizeHist(yuvChannels[0], yuvChannels[0]);
+    }
+    else
+    {
+        equalizeHist(auxGrayImage, auxGrayImage);
+    }
+}
+
+void MainWindow::gaussianBlur(){
+    if (ui->colorButton->isChecked())
+    {
+        GaussianBlur(yuvChannels[0], yuvChannels[0], Size(ui->gaussWidthBox->value(), ui->gaussWidthBox->value()), 0, 0);
+    }
+    else
+    {
+        GaussianBlur(auxGrayImage, auxGrayImage, Size(ui->gaussWidthBox->value(), ui->gaussWidthBox->value()), 0, 0);
+    }
+
+}
+void MainWindow::linearFilter(){
+    Mat kernel = (Mat_<float>(3, 3) << lFilterDialog.kernelWidget->item(0, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(0, 2)->text().toFloat(),
+                  lFilterDialog.kernelWidget->item(1, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(1, 2)->text().toFloat(),
+                  lFilterDialog.kernelWidget->item(2, 0)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 1)->text().toFloat(), lFilterDialog.kernelWidget->item(2, 2)->text().toFloat());
+
+    if (ui->colorButton->isChecked())
+    {
+        filter2D(yuvChannels[0], yuvChannels[0], -1, kernel);
+    }
+    else
+    {
+        filter2D(grayImage, auxGrayImage, -1, kernel);
+    }
+}
+void MainWindow::medianFilter(){
+    if (ui->colorButton->isChecked())
+    {
+        medianBlur(yuvChannels[0], yuvChannels[0], ui->gaussWidthBox->value());
+    }
+    else
+    {
+        medianBlur(grayImage, auxGrayImage, ui->gaussWidthBox->value());
+    }
+}
+void MainWindow::dilate(){
+    if (ui->colorButton->isChecked())
+    {
+        //apply threshold
+        cv::threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+        //apply dilate
+        cv::dilate(yuvChannels[0], yuvChannels[0], Mat());
+    }
+    else
+    {
+        cv::threshold(auxGrayImage, auxGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+        cv::dilate(auxGrayImage, auxGrayImage, Mat());
+    }
+}
+void MainWindow::erode(){
+    if (ui->colorButton->isChecked())
+    {
+        cv::threshold(yuvChannels[0], yuvChannels[0], ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+        //apply erode
+        cv::erode(yuvChannels[0], yuvChannels[0], Mat());
+    }
+    else
+    {
+        cv::threshold(auxGrayImage, auxGrayImage, ui->thresholdSpinBox->value(), 255, THRESH_BINARY);
+        cv::erode(auxGrayImage, auxGrayImage, Mat());
+    }
+}
+
+void MainWindow::negative(){
+
+    std::vector<int> vectorR = {0, 85, 170, 255};
+    std::vector<int> vectorS = {255, 170, 85, 0};
+
+    std::vector<uchar>tablaWT(256);
+
+    //create the lookup table using the vectorD and vectorS
+    for (int i = 0; i<3 ; i++)
+    {
+        for (int r = vectorR[i] ; r <= vectorR[i+1] ; r++)
+        {
+            tablaWT[r] = ((r-vectorR[i])*(vectorS[i+1]-vectorS[i]))/(vectorR[i+1]-vectorR[i])+vectorS[i];
+        }
+    }
+
+    if(ui->colorButton->isChecked()){
+        LUT(yuvChannels[0], tablaWT, yuvChannels[0]);
+    }else{
+        LUT(auxGrayImage,tablaWT,auxGrayImage);
+    }
+}
+
+
+void MainWindow::applySeveral(){
+    std::vector<bool> numOperations = {operOrderDialog.firstOperCheckBox->isChecked(),operOrderDialog.secondOperCheckBox->isChecked(),operOrderDialog.thirdOperCheckBox->isChecked(),operOrderDialog.fourthOperCheckBox->isChecked()};
+
+    std::vector<int> operationIndex = {operOrderDialog.operationComboBox1->currentIndex(),operOrderDialog.operationComboBox2->currentIndex(),operOrderDialog.operationComboBox3->currentIndex(),operOrderDialog.operationComboBox4->currentIndex()};
+    for (int i = 0; i<4 ; i++ ) {
+        if(numOperations[i]==true){
+            switch(operationIndex[i]){
+            case 0: //pixelT
+                pixelT();
+                break;
+            case 1: //thresholding
+                threshold();
+                break;
+            case 2: //equalize
+                equalize();
+                break;
+            case 3: //gauusian blur
+                gaussianBlur();
+                break;
+            case 4: //median blur
+                medianFilter();
+                break;
+            case 5: //linear filter
+                linearFilter();
+                break;
+            case 6: //dilate
+                dilate();
+                break;
+            case 7: //erode
+                erode();
+                break;
+            case 8:
+                negative();
+            }
+
+        }
+    }
+
+
+
+}
+

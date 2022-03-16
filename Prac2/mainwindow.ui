@@ -171,6 +171,11 @@
       <string>Apply several...</string>
      </property>
     </item>
+    <item>
+     <property name="text">
+      <string>Negative</string>
+     </property>
+    </item>
    </widget>
    <widget class="QLabel" name="operationLabel">
     <property name="geometry">

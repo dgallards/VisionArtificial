@@ -68,6 +68,11 @@
      <string>Erode</string>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>Negative</string>
+    </property>
+   </item>
   </widget>
   <widget class="QComboBox" name="operationComboBox2">
    <property name="enabled">
@@ -122,6 +127,11 @@
    <item>
     <property name="text">
      <string>Erode</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Negative</string>
     </property>
    </item>
   </widget>
@@ -180,6 +190,11 @@
      <string>Erode</string>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>Negative</string>
+    </property>
+   </item>
   </widget>
   <widget class="QComboBox" name="operationComboBox4">
    <property name="enabled">
@@ -231,6 +246,11 @@
    <item>
     <property name="text">
      <string>Erode</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Negative</string>
     </property>
    </item>
   </widget>

@@ -80,6 +80,8 @@ private:
     VideoCapture *cap;
     ImgViewer *visorS, *visorD, *visorHistoS, *visorHistoD;
     Mat colorImage, grayImage, destColorImage, destGrayImage;
+    Mat yuvColorImage, auxGrayImage, auxColorImage;
+    std::vector<Mat> yuvChannels;
     bool winSelected;
     Rect imageWindow;
 
@@ -96,6 +98,17 @@ public slots:
 private slots:
     void on_loadButton_clicked();
     void on_saveButton_clicked();
+
+    void pixelT();
+    void threshold();
+    void equalize();
+    void gaussianBlur();
+    void linearFilter();
+    void medianFilter();
+    void dilate();
+    void erode();
+    void applySeveral();
+    void negative();
 };
 
 
