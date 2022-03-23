@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>860</width>
+    <width>901</width>
     <height>282</height>
    </rect>
   </property>
@@ -48,9 +48,9 @@
   <widget class="QPushButton" name="captureButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>720</x>
      <y>20</y>
-     <width>101</width>
+     <width>171</width>
      <height>31</height>
     </rect>
    </property>
@@ -67,9 +67,9 @@
   <widget class="QPushButton" name="colorButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>720</x>
      <y>60</y>
-     <width>101</width>
+     <width>171</width>
      <height>31</height>
     </rect>
    </property>
@@ -81,6 +81,76 @@
    </property>
    <property name="checked">
     <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>110</y>
+     <width>121</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Select Objects</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="selectObjectComboBox">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>140</y>
+     <width>171</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="editable">
+    <bool>true</bool>
+   </property>
+   <property name="insertPolicy">
+    <enum>QComboBox::InsertAtCurrent</enum>
+   </property>
+   <item>
+    <property name="text">
+     <string>Object1</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Object2</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Object3</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QPushButton" name="addObjectButton">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>190</y>
+     <width>171</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add object image</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="DeleteObjectButton">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>230</y>
+     <width>171</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Delete object image</string>
    </property>
   </widget>
  </widget>

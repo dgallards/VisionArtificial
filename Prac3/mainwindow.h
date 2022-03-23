@@ -47,6 +47,9 @@ public slots:
     void selectWindow(QPointF p, int w, int h);
     void deselectWindow(QPointF p);
 
+private slots:
+    void on_addObjectButton_clicked();
+    void on_DeleteObjectButton_clicked();
 };
 
 

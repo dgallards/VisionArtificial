@@ -122,3 +122,15 @@ void MainWindow::deselectWindow(QPointF p)
 }
 
 
+
+void MainWindow::on_addObjectButton_clicked()
+{
+
+}
+
+
+void MainWindow::on_DeleteObjectButton_clicked()
+{
+
+}
+
