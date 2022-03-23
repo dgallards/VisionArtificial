@@ -20,6 +20,14 @@ namespace Ui {
     class MainWindow;
 }
 
+struct Objeto{
+    Mat imagen[3];
+    Point2i puntos;
+    bool valid=false;
+    Mat descriptors[3];
+    std::vector<KeyPoint>puntosClave[3];
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -36,9 +44,11 @@ private:
     ImgViewer *visorS, *visorD;
     Mat colorImage, grayImage;
     Mat destColorImage, destGrayImage;
-    Mat objeto0, objeto1, objeto2;
+    Objeto objetos[3];
     bool winSelected;
     Rect imageWindow;
+
+
 
 
 public slots:
@@ -51,8 +61,6 @@ public slots:
     void deselectWindow(QPointF p);
 
 private slots:
-    void on_addObjectButton_clicked();
-    void on_DeleteObjectButton_clicked();
 };
 
 
