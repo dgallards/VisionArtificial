@@ -36,6 +36,7 @@ private:
     ImgViewer *visorS, *visorD;
     Mat colorImage, grayImage;
     Mat destColorImage, destGrayImage;
+    Mat objeto0, objeto1, objeto2;
     bool winSelected;
     Rect imageWindow;
 
@@ -44,6 +45,8 @@ public slots:
     void compute();
     void start_stop_capture(bool start);
     void change_color_gray(bool color);
+    void add_object();
+    void del_object();
     void selectWindow(QPointF p, int w, int h);
     void deselectWindow(QPointF p);
 

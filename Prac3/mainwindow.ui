@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>901</width>
-    <height>282</height>
+    <width>911</width>
+    <height>287</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,9 +48,9 @@
   <widget class="QPushButton" name="captureButton">
    <property name="geometry">
     <rect>
-     <x>720</x>
+     <x>740</x>
      <y>20</y>
-     <width>171</width>
+     <width>151</width>
      <height>31</height>
     </rect>
    </property>
@@ -67,9 +67,9 @@
   <widget class="QPushButton" name="colorButton">
    <property name="geometry">
     <rect>
-     <x>720</x>
+     <x>740</x>
      <y>60</y>
-     <width>171</width>
+     <width>151</width>
      <height>31</height>
     </rect>
    </property>
@@ -86,24 +86,30 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>720</x>
+     <x>750</x>
      <y>110</y>
-     <width>121</width>
-     <height>24</height>
+     <width>101</width>
+     <height>17</height>
     </rect>
    </property>
    <property name="text">
-    <string>Select Objects</string>
+    <string>Select Object</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="selectObjectComboBox">
+  <widget class="QComboBox" name="comboBox">
    <property name="geometry">
     <rect>
-     <x>720</x>
+     <x>740</x>
      <y>140</y>
-     <width>171</width>
-     <height>32</height>
+     <width>151</width>
+     <height>25</height>
     </rect>
+   </property>
+   <property name="tabletTracking">
+    <bool>false</bool>
+   </property>
+   <property name="acceptDrops">
+    <bool>true</bool>
    </property>
    <property name="editable">
     <bool>true</bool>
@@ -111,46 +117,49 @@
    <property name="insertPolicy">
     <enum>QComboBox::InsertAtCurrent</enum>
    </property>
+   <property name="duplicatesEnabled">
+    <bool>false</bool>
+   </property>
    <item>
     <property name="text">
-     <string>Object1</string>
+     <string>Object 1</string>
     </property>
    </item>
    <item>
     <property name="text">
-     <string>Object2</string>
+     <string>Object 2</string>
     </property>
    </item>
    <item>
     <property name="text">
-     <string>Object3</string>
+     <string>Object 3</string>
     </property>
    </item>
   </widget>
-  <widget class="QPushButton" name="addObjectButton">
+  <widget class="QPushButton" name="addButton">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>190</y>
-     <width>171</width>
-     <height>32</height>
+     <x>740</x>
+     <y>180</y>
+     <width>151</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Add object image</string>
+    <string>Add Object Image</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="DeleteObjectButton">
+  <widget class="QPushButton" name="delButton">
    <property name="geometry">
     <rect>
-     <x>720</x>
-     <y>230</y>
-     <width>171</width>
-     <height>32</height>
+     <x>740</x>
+     <y>220</y>
+     <width>151</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Delete object image</string>
+    <string>Del Object Image</string>
    </property>
   </widget>
  </widget>

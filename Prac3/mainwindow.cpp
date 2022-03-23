@@ -23,8 +23,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&timer,SIGNAL(timeout()),this,SLOT(compute()));
     connect(ui->captureButton,SIGNAL(clicked(bool)),this,SLOT(start_stop_capture(bool)));
     connect(ui->colorButton,SIGNAL(clicked(bool)),this,SLOT(change_color_gray(bool)));
+    connect(ui->addButton,SIGNAL(clicked(bool)),this, SLOT(add_object()));
+    connect(ui->delButton,SIGNAL(clicked(bool)),this, SLOT(del_object()));
     connect(visorS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
     connect(visorS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
+
     timer.start(30);
 }
 
@@ -89,6 +92,39 @@ void MainWindow::change_color_gray(bool color)
         visorS->setImage(&grayImage);
         visorD->setImage(&destGrayImage);
     }
+}
+
+void MainWindow::add_object(){
+    if(winSelected){
+        int x = (320-imageWindow.width)/2;
+        int y = (240-imageWindow.height)/2;
+        if(ui->colorButton->isChecked()){
+            destColorImage.setTo(0);
+            colorImage(imageWindow).copyTo(destColorImage(Rect(x,y,imageWindow.width,imageWindow.height))); //cambiar newImage por dest
+        }else{
+            destGrayImage.setTo(0);
+            grayImage(imageWindow).copyTo(destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height))); //cambiar newImage por dest
+        }
+        visorD->update();
+        switch(ui->comboBox->currentIndex()){
+            case 0:
+                objeto0.setTo(0);
+                objeto0 = grayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
+                break;
+            case 1:
+                objeto1.setTo(0);
+                objeto1 = grayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
+                break;
+            case 2:
+                objeto2.setTo(0);
+                objeto2 = grayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
+                break;
+        }
+    }
+}
+
+void MainWindow::del_object(){
+
 }
 
 void MainWindow::selectWindow(QPointF p, int w, int h)
