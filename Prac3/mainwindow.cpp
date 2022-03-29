@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    cap = new VideoCapture(0);
+    cap = new VideoCapture(1);
     winSelected = false;
 
     colorImage.create(240,320,CV_8UC3);
@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->delButton,SIGNAL(clicked(bool)),this, SLOT(del_object()));
     connect(visorS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
     connect(visorS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
-
+    orb =  cv::ORB::create();
     timer.start(30);
 }
 
@@ -58,33 +58,13 @@ void MainWindow::compute()
 
 
     //En este punto se debe incluir el código asociado con el procesamiento de cada captura
-    switch(ui->comboBox->currentIndex()){
-    case 0:
-        if(objetos[0].valid!= false){
-            destGrayImage.setTo(0);
-            objetos[0].imagen[0].copyTo(destGrayImage(Rect(objetos[0].puntos.x,objetos[0].puntos.y,objetos[0].imagen[0].cols,objetos[0].imagen[0].rows))); //cambiar newImage por dest
-        }else{
-            destGrayImage.setTo(0);
-        }
-        break;
-    case 1:
-        if(objetos[1].valid!= false){
-            destGrayImage.setTo(0);
-            objetos[1].imagen[0].copyTo(destGrayImage(Rect(objetos[1].puntos.x,objetos[1].puntos.y,objetos[1].imagen[0].cols,objetos[1].imagen[0].rows))); //cambiar newImage por dest
-        }else{
-            destGrayImage.setTo(0);
-        }
-        break;
-    case 2:
-        if(objetos[2].valid!= false){
-            destGrayImage.setTo(0);
-            objetos[2].imagen[0].copyTo(destGrayImage(Rect(objetos[2].puntos.x,objetos[2].puntos.y,objetos[2].imagen[0].cols,objetos[2].imagen[0].rows))); //cambiar newImage por dest
-        }else{
-            destGrayImage.setTo(0);
-        }
-        break;
-    }
 
+    if(objetos[ui->comboBox->currentIndex()].valid){
+        destGrayImage.setTo(0);
+        objetos[ui->comboBox->currentIndex()].imagen[0].copyTo(destGrayImage(Rect(objetos[ui->comboBox->currentIndex()].puntos.x,objetos[ui->comboBox->currentIndex()].puntos.y,objetos[ui->comboBox->currentIndex()].imagen[0].cols,objetos[ui->comboBox->currentIndex()].imagen[0].rows))); //cambiar newImage por dest
+    }else{
+        destGrayImage.setTo(0);
+    }
 
     //Actualización de los visores
 
@@ -132,45 +112,27 @@ void MainWindow::add_object(){
             grayImage(imageWindow).copyTo(destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height))); //cambiar newImage por dest
         }
         visorD->update();
-        switch(ui->comboBox->currentIndex()){
-        case 0:
-            objetos[0].imagen[0].setTo(0);
-            objetos[0].imagen[0] = destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
-            objetos[0].puntos = Point2i(x,y);
-            objetos[0].valid = true;
+        
+        objetos[ui->comboBox->currentIndex()].imagen[0].setTo(0);
+        objetos[ui->comboBox->currentIndex()].imagen[0] = destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
+        objetos[ui->comboBox->currentIndex()].puntos = Point2i(x,y);
+        objetos[ui->comboBox->currentIndex()].valid = true;
 
-            //scale image[0] x1.5
-            cv::resize(objetos[0].imagen[0], objetos[0].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
-            //scale image[1] x0.5
-            cv::resize(objetos[0].imagen[0], objetos[0].imagen[2], Size(0,0), 0.5, 0.5, INTER_LINEAR);
-            break;
-        case 1:
-            objetos[1].imagen[0].setTo(0);
-            objetos[1].imagen[0] = destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
-            objetos[1].puntos = Point2i(x,y);
-            objetos[1].valid = true;
+        //scale image[0] x1.5
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[0].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
+        //scale image[1] x0.5
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[0].imagen[2], Size(0,0), 0.75, 0.75, INTER_LINEAR);
 
-            //scale image[0] x1.5
-            cv::resize(objetos[1].imagen[0], objetos[1].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
-            //scale image[1] x0.5
-            cv::resize(objetos[1].imagen[0], objetos[1].imagen[2], Size(0,0), 0.5, 0.5, INTER_LINEAR);
-            break;
-        case 2:
-            objetos[2].imagen[0].setTo(0);
-            objetos[2].imagen[0] = destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
-            objetos[2].puntos = Point2i(x,y);
-            objetos[2].valid = true;
-            
-            //scale image[0] x1.5
-            cv::resize(objetos[2].imagen[0], objetos[2].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
-            //scale image[1] x0.5
-            cv::resize(objetos[2].imagen[0], objetos[2].imagen[2], Size(0,0), 0.5, 0.5, INTER_LINEAR);
-            break;
-        }
+        orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[0], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[0], objetos[ui->comboBox->currentIndex()].descriptors[0]);
+        orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[1], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[1], objetos[ui->comboBox->currentIndex()].descriptors[1]);
+        orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[2], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[2], objetos[ui->comboBox->currentIndex()].descriptors[2]);
+        
     }
 }
 
 void MainWindow::del_object(){
+
+    objetos[ui->comboBox->currentIndex()].valid=false;
 
 }
 

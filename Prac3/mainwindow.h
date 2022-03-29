@@ -47,8 +47,7 @@ private:
     Objeto objetos[3];
     bool winSelected;
     Rect imageWindow;
-
-
+    Ptr<ORB> orb;
 
 
 public slots:
