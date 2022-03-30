@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    cap = new VideoCapture(1);
+    cap = new VideoCapture(0);
     winSelected = false;
 
     colorImage.create(240,320,CV_8UC3);
@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(visorS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
     connect(visorS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
     orb =  cv::ORB::create();
+    matcher = cv::BFMatcher(cv::NORM_HAMMING,true);
     timer.start(30);
 }
 
@@ -65,6 +66,26 @@ void MainWindow::compute()
     }else{
         destGrayImage.setTo(0);
     }
+
+    //ahora hacemos el matching
+    orb->detectAndCompute(grayImage,Mat(),KP,desc);
+
+    std::vector<std::vector<DMatch>> matches;
+
+    if(!matcher.empty()){
+
+        matcher.knnMatch(desc,matches,3);
+
+        for(int i = 0; i < matches.size() ; i++){
+            for(int j = 0 ; j<3 ; j++){
+                if(matches[i][j].distance <= 30){
+                    
+                }
+            }
+            
+        }
+    }
+
 
     //Actualización de los visores
 
@@ -127,6 +148,13 @@ void MainWindow::add_object(){
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[1], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[1], objetos[ui->comboBox->currentIndex()].descriptors[1]);
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[2], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[2], objetos[ui->comboBox->currentIndex()].descriptors[2]);
         
+        //create description collection
+        for(int i = 0; i < 3; i++){
+            if(!objetos[ui->comboBox->currentIndex()].descriptors[i].empty()){
+                matcher.add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
+            }
+        }
+
     }
 }
 

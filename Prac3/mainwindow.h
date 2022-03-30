@@ -26,6 +26,7 @@ struct Objeto{
     bool valid=false;
     Mat descriptors[3];
     std::vector<KeyPoint>puntosClave[3];
+    std::vector<std::vector<DMatch>> objectMatches[3][3];
 };
 
 class MainWindow : public QMainWindow
@@ -48,6 +49,10 @@ private:
     bool winSelected;
     Rect imageWindow;
     Ptr<ORB> orb;
+    BFMatcher matcher;
+    std::vector<KeyPoint> KP;
+    Mat desc;
+
 
 
 public slots:
