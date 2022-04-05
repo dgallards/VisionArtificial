@@ -56,8 +56,6 @@ void MainWindow::compute()
         cvtColor(colorImage, colorImage, COLOR_BGR2RGB);
 
     }
-
-
     //En este punto se debe incluir el código asociado con el procesamiento de cada captura
 
     if(objetos[ui->comboBox->currentIndex()].valid){
@@ -72,17 +70,29 @@ void MainWindow::compute()
 
     std::vector<std::vector<DMatch>> matches;
 
-    if(!matcher.empty()){
-
+    if(!matcher.empty() && KP.size()>10){
         matcher.knnMatch(desc,matches,3);
 
-        for(int i = 0; i < matches.size() ; i++){
-            for(int j = 0 ; j<3 ; j++){
-                if(matches[i][j].distance <= 30){
-                    
+        //convert matches
+
+        std::vector<std::vector<std::vector<DMatch>>> objectMatches;
+
+        int threshold = 30;
+
+        //clear
+
+        for (int i = 0; i<(int) objectMatches.size() ;i++ ) {
+            for (int j = 0; j <(int) objectMatches.size() ;j++ ) {
+                objectMatches[i][j].clear();
+            }
+        }
+
+        for(std::vector<DMatch> match: matches){
+            for (DMatch m: match){
+                if(m.distance < threshold){
+                    objectMatches[colect2object[m.imgIdx/3]][m.imgIdx % 3].push_back(m);
                 }
             }
-            
         }
     }
 
@@ -148,11 +158,21 @@ void MainWindow::add_object(){
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[1], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[1], objetos[ui->comboBox->currentIndex()].descriptors[1]);
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[2], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[2], objetos[ui->comboBox->currentIndex()].descriptors[2]);
         
-        //create description collection
+        //create & regenerate description collection
+        if(!objetos[ui->comboBox->currentIndex()].puntosClave[0].empty()&&!objetos[ui->comboBox->currentIndex()].puntosClave[1].empty()&&!objetos[ui->comboBox->currentIndex()].puntosClave[2].empty()){
+            matcher.clear();
+            int counter = 0;
+
         for(int i = 0; i < 3; i++){
-            if(!objetos[ui->comboBox->currentIndex()].descriptors[i].empty()){
+            if(objetos[i].valid){
                 matcher.add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
+                colect2object[counter]=i;
+                counter++;
             }
+        }
+        }else{
+            objetos[ui->comboBox->currentIndex()].valid = false;
+
         }
 
     }
@@ -161,6 +181,7 @@ void MainWindow::add_object(){
 void MainWindow::del_object(){
 
     objetos[ui->comboBox->currentIndex()].valid=false;
+
 
 }
 

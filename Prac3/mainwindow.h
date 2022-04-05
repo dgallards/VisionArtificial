@@ -52,6 +52,7 @@ private:
     BFMatcher matcher;
     std::vector<KeyPoint> KP;
     Mat desc;
+    int colect2object[3]={-1,-1,-1};
 
 
 
