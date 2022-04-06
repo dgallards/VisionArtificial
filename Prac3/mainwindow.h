@@ -49,10 +49,11 @@ private:
     bool winSelected;
     Rect imageWindow;
     Ptr<ORB> orb;
-    BFMatcher matcher;
+    Ptr<BFMatcher> matcher;
     std::vector<KeyPoint> KP;
     Mat desc;
     int colect2object[3]={-1,-1,-1};
+
 
 
 

@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(visorS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
     connect(visorS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
     orb =  cv::ORB::create();
-    matcher = cv::BFMatcher(cv::NORM_HAMMING,true);
+    matcher = cv::BFMatcher::create(cv::NORM_HAMMING,false);
     timer.start(30);
 }
 
@@ -67,25 +67,29 @@ void MainWindow::compute()
 
     //ahora hacemos el matching
     orb->detectAndCompute(grayImage,Mat(),KP,desc);
-
+    qDebug("hago el detect and compute");
     std::vector<std::vector<DMatch>> matches;
 
-    if(!matcher.empty() && KP.size()>10){
-        matcher.knnMatch(desc,matches,3);
+    if(!matcher->empty() && KP.size()>10){
+        qDebug("El matcher es valido");
+        
+        matcher->knnMatch(desc,matches,3);
+        qDebug("No llego aqui");
 
         //convert matches
 
         std::vector<std::vector<std::vector<DMatch>>> objectMatches;
 
-        int threshold = 30;
+        objectMatches.resize(3);
 
         //clear
 
         for (int i = 0; i<(int) objectMatches.size() ;i++ ) {
-            for (int j = 0; j <(int) objectMatches.size() ;j++ ) {
-                objectMatches[i][j].clear();
-            }
+            objectMatches[i].resize(3);
         }
+        qDebug("hago el clear");
+
+        int threshold = 30;
 
         for(std::vector<DMatch> match: matches){
             for (DMatch m: match){
@@ -94,6 +98,8 @@ void MainWindow::compute()
                 }
             }
         }
+        qDebug("termino los matches");
+
     }
 
 
@@ -160,12 +166,12 @@ void MainWindow::add_object(){
         
         //create & regenerate description collection
         if(!objetos[ui->comboBox->currentIndex()].puntosClave[0].empty()&&!objetos[ui->comboBox->currentIndex()].puntosClave[1].empty()&&!objetos[ui->comboBox->currentIndex()].puntosClave[2].empty()){
-            matcher.clear();
+            matcher->clear();
             int counter = 0;
 
         for(int i = 0; i < 3; i++){
             if(objetos[i].valid){
-                matcher.add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
+                matcher->add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
                 colect2object[counter]=i;
                 counter++;
             }
