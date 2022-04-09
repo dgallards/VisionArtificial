@@ -74,7 +74,7 @@ void MainWindow::compute()
         qDebug("El matcher es valido");
         
         matcher->knnMatch(desc,matches,3);
-        qDebug("No llego aqui");
+        qDebug("llego aqui");
 
         //convert matches
 
@@ -98,7 +98,78 @@ void MainWindow::compute()
                 }
             }
         }
-        qDebug("termino los matches");
+        qDebug("comienzo el proceso de la homografia");
+        //Homografía
+        int indexrow = 0;
+        int indexcol = 0;
+
+        int bestIndexY = -1;
+        int bestIndexX = -1;
+        int tam=0;
+        //por cada fila de objetcMatches
+        for(std::vector<std::vector<DMatch>> row: objectMatches){
+            for(std::vector<DMatch> matches: row){ //por cada vector de matches
+                //save index of the row
+                qDebug()<<"el tamaño es:";
+                qDebug()<<matches.size();
+                qDebug()<<"col:";
+                qDebug()<<indexcol;
+                qDebug()<<"fila:";
+                qDebug()<<indexrow;
+                if(matches.size() > tam){ //guardamos el mejor vector de cada fila
+                    tam = matches.size();
+                    bestIndexX = indexcol;
+                    bestIndexY = indexrow;
+                }
+                indexcol++;
+            }
+            indexrow++;
+            indexcol = 0;
+        }
+        qDebug()<<"guardo los puntos: ";
+        qDebug()<<bestIndexY;
+        qDebug()<<bestIndexX;
+        //guardamos los puntos
+
+        if(bestIndexX!=-1&&bestIndexY!=-1&&tam>10){
+            std::vector<Point2f> imagePoints;
+            std::vector<Point2f> objectPoints;
+
+            for (int i=0;i<tam ;i++ ) {
+                imagePoints.push_back(KP[objectMatches[bestIndexY][bestIndexX][i].queryIdx].pt);
+                objectPoints.push_back(objetos[bestIndexY].puntosClave[bestIndexX][objectMatches[bestIndexY][bestIndexX][i].trainIdx].pt);
+            }
+            //        imagePoints.push_back(KP[objectMatches[bestIndexY][bestIndexX][0].queryIdx].pt);
+            //        imagePoints.push_back(KP[objectMatches[bestIndexY][bestIndexX][1].queryIdx].pt);
+            //        imagePoints.push_back(KP[objectMatches[bestIndexY][bestIndexX][2].queryIdx].pt);
+            qDebug("puntos de imagen guardados");
+            //        objectPoints.push_back(objetos[bestIndexY].puntosClave[bestIndexX][objectMatches[bestIndexY][bestIndexX][0].trainIdx].pt);
+            //        objectPoints.push_back(objetos[bestIndexY].puntosClave[bestIndexX][objectMatches[bestIndexY][bestIndexX][1].trainIdx].pt);
+            //        objectPoints.push_back(objetos[bestIndexY].puntosClave[bestIndexX][objectMatches[bestIndexY][bestIndexX][2].trainIdx].pt);
+
+            qDebug("comienzo homografia");
+            auto H = findHomography(objectPoints,imagePoints,LMEDS);
+            qDebug("comienzo a guardar esquinas");
+            std::vector<Point2f> objectCorners;
+            std::vector<Point2f> imageCorners;
+            float w = objetos[bestIndexY].imagen[bestIndexX].cols;
+            float h = objetos[bestIndexY].imagen[bestIndexX].rows;
+            objectCorners = {Point2f(0, 0), Point2f(w-1, 0), Point2f(w-1, h-1), Point2f(0, h-1)};
+            qDebug("termino guardar esquinas");
+
+            perspectiveTransform(objectCorners,imageCorners,H);
+            qDebug("transformo prespectiva");
+
+            //create a Qvector of QPoints
+            QVector<QPoint> imageCornersQ;
+            //convert imageCorners to QVector
+            for(Point2f p: imageCorners)
+                imageCornersQ.push_back(QPoint(p.x,p.y));
+            visorS->drawPolyLine(imageCornersQ,Qt::red);
+
+
+            qDebug("termino los matches");
+        }
 
     }
 
@@ -139,6 +210,7 @@ void MainWindow::change_color_gray(bool color)
 
 void MainWindow::add_object(){
     if(winSelected){
+        winSelected=false;
         int x = (320-imageWindow.width)/2;
         int y = (240-imageWindow.height)/2;
         if(ui->colorButton->isChecked()){
@@ -156,9 +228,9 @@ void MainWindow::add_object(){
         objetos[ui->comboBox->currentIndex()].valid = true;
 
         //scale image[0] x1.5
-        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[0].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
         //scale image[1] x0.5
-        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[0].imagen[2], Size(0,0), 0.75, 0.75, INTER_LINEAR);
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[2], Size(0,0), 0.75, 0.75, INTER_LINEAR);
 
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[0], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[0], objetos[ui->comboBox->currentIndex()].descriptors[0]);
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[1], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[1], objetos[ui->comboBox->currentIndex()].descriptors[1]);
@@ -169,13 +241,13 @@ void MainWindow::add_object(){
             matcher->clear();
             int counter = 0;
 
-        for(int i = 0; i < 3; i++){
-            if(objetos[i].valid){
-                matcher->add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
-                colect2object[counter]=i;
-                counter++;
+            for(int i = 0; i < 3; i++){
+                if(objetos[i].valid){
+                    matcher->add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
+                    colect2object[counter]=i;
+                    counter++;
+                }
             }
-        }
         }else{
             objetos[ui->comboBox->currentIndex()].valid = false;
 

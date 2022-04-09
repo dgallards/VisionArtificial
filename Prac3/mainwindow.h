@@ -9,7 +9,8 @@
 #include <opencv2/video/video.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-
+#include <string>
+#include <iostream>
 #include <imgviewer.h>
 
 
@@ -25,7 +26,7 @@ struct Objeto{
     Point2i puntos;
     bool valid=false;
     Mat descriptors[3];
-    std::vector<KeyPoint>puntosClave[3];
+    std::vector<cv::KeyPoint>puntosClave[3];
     std::vector<std::vector<DMatch>> objectMatches[3][3];
 };
 
@@ -53,7 +54,6 @@ private:
     std::vector<KeyPoint> KP;
     Mat desc;
     int colect2object[3]={-1,-1,-1};
-
 
 
 
