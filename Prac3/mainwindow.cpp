@@ -131,7 +131,7 @@ void MainWindow::compute()
         qDebug()<<bestIndexX;
         //guardamos los puntos
 
-        if(bestIndexX!=-1&&bestIndexY!=-1&&tam>10){
+        if(bestIndexX!=-1&&bestIndexY!=-1&&tam>5){
             std::vector<Point2f> imagePoints;
             std::vector<Point2f> objectPoints;
 
@@ -149,24 +149,27 @@ void MainWindow::compute()
 
             qDebug("comienzo homografia");
             auto H = findHomography(objectPoints,imagePoints,LMEDS);
-            qDebug("comienzo a guardar esquinas");
-            std::vector<Point2f> objectCorners;
-            std::vector<Point2f> imageCorners;
-            float w = objetos[bestIndexY].imagen[bestIndexX].cols;
-            float h = objetos[bestIndexY].imagen[bestIndexX].rows;
-            objectCorners = {Point2f(0, 0), Point2f(w-1, 0), Point2f(w-1, h-1), Point2f(0, h-1)};
-            qDebug("termino guardar esquinas");
+            if(!H.empty()){
+                qDebug("comienzo a guardar esquinas");
+                std::vector<Point2f> objectCorners;
+                std::vector<Point2f> imageCorners;
+                float w = objetos[bestIndexY].imagen[bestIndexX].cols-1;
+                float h = objetos[bestIndexY].imagen[bestIndexX].rows-1;
+                objectCorners = {Point2f(0, 0), Point2f(w-1, 0), Point2f(w-1, h-1), Point2f(0, h-1)};
+                qDebug("termino guardar esquinas");
 
-            perspectiveTransform(objectCorners,imageCorners,H);
-            qDebug("transformo prespectiva");
+                perspectiveTransform(objectCorners,imageCorners,H);
+                qDebug("transformo prespectiva");
 
-            //create a Qvector of QPoints
-            QVector<QPoint> imageCornersQ;
-            //convert imageCorners to QVector
-            for(Point2f p: imageCorners)
-                imageCornersQ.push_back(QPoint(p.x,p.y));
-            visorS->drawPolyLine(imageCornersQ,Qt::red);
-
+                //create a Qvector of QPoints
+                QVector<QPoint> imageCornersQ;
+                //convert imageCorners to QVector
+                for(Point2f p: imageCorners)
+                    imageCornersQ.push_back(QPoint(p.x,p.y));
+                imageCornersQ.push_back(imageCornersQ[0]);
+                visorS->drawPolyLine(imageCornersQ,colores[bestIndexY]);
+                visorS->drawText(imageCornersQ[0],ui->comboBox->itemText(bestIndexY),20,colores[bestIndexY]);
+            }
 
             qDebug("termino los matches");
         }
@@ -223,14 +226,16 @@ void MainWindow::add_object(){
         visorD->update();
         
         objetos[ui->comboBox->currentIndex()].imagen[0].setTo(0);
+        objetos[ui->comboBox->currentIndex()].imagen[1].setTo(0);
+        objetos[ui->comboBox->currentIndex()].imagen[2].setTo(0);
         objetos[ui->comboBox->currentIndex()].imagen[0] = destGrayImage(Rect(x,y,imageWindow.width,imageWindow.height)).clone();
         objetos[ui->comboBox->currentIndex()].puntos = Point2i(x,y);
         objetos[ui->comboBox->currentIndex()].valid = true;
 
         //scale image[0] x1.5
-        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[1], Size(0,0), 1.5, 1.5, INTER_LINEAR);
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[1], Size(), 1.5, 1.5, INTER_LINEAR);
         //scale image[1] x0.5
-        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[2], Size(0,0), 0.75, 0.75, INTER_LINEAR);
+        cv::resize(objetos[ui->comboBox->currentIndex()].imagen[0], objetos[ui->comboBox->currentIndex()].imagen[2], Size(), 0.75, 0.75, INTER_LINEAR);
 
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[0], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[0], objetos[ui->comboBox->currentIndex()].descriptors[0]);
         orb->detectAndCompute(objetos[ui->comboBox->currentIndex()].imagen[1], Mat(), objetos[ui->comboBox->currentIndex()].puntosClave[1], objetos[ui->comboBox->currentIndex()].descriptors[1]);
@@ -243,7 +248,9 @@ void MainWindow::add_object(){
 
             for(int i = 0; i < 3; i++){
                 if(objetos[i].valid){
-                    matcher->add(objetos[ui->comboBox->currentIndex()].descriptors[i]);
+                    matcher->add(objetos[i].descriptors[0]);
+                    matcher->add(objetos[i].descriptors[1]);
+                    matcher->add(objetos[i].descriptors[2]);
                     colect2object[counter]=i;
                     counter++;
                 }
@@ -259,6 +266,22 @@ void MainWindow::add_object(){
 void MainWindow::del_object(){
 
     objetos[ui->comboBox->currentIndex()].valid=false;
+    objetos[ui->comboBox->currentIndex()].imagen[0].setTo(0);
+    objetos[ui->comboBox->currentIndex()].imagen[1].setTo(0);
+    objetos[ui->comboBox->currentIndex()].imagen[2].setTo(0);
+
+    matcher->clear();
+    int counter = 0;
+
+    for(int i = 0; i < 3; i++){
+        if(objetos[i].valid){
+            matcher->add(objetos[i].descriptors[0]);
+            matcher->add(objetos[i].descriptors[1]);
+            matcher->add(objetos[i].descriptors[2]);
+            colect2object[counter]=i;
+            counter++;
+        }
+    }
 
 
 }

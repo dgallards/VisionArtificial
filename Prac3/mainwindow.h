@@ -54,6 +54,7 @@ private:
     std::vector<KeyPoint> KP;
     Mat desc;
     int colect2object[3]={-1,-1,-1};
+    Qt::GlobalColor colores[3]={Qt::red,Qt::yellow,Qt::blue};
 
 
 
