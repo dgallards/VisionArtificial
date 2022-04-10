@@ -66,7 +66,8 @@ public slots:
     void del_object();
     void selectWindow(QPointF p, int w, int h);
     void deselectWindow(QPointF p);
-
+    void prepararImagen();
+    void matchingImagen();
 private slots:
 };
 
