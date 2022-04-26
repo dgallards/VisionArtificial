@@ -68,6 +68,7 @@ private slots:
     void on_categoriesButton_clicked();
     void on_segmentButton_clicked();
     void on_combineButton_clicked();
+    void categoriesButton();
 };
 
 

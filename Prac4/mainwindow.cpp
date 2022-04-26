@@ -27,27 +27,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
     connect(ui->categoriesButton, SIGNAL(clicked()), &categoriesDialog, SLOT(show()));
     connect(categoriesDialog.okButton, SIGNAL(clicked()), &categoriesDialog, SLOT(hide()));
+    connect(categoriesDialog.okButton, SIGNAL(clicked()), this, SLOT(categoriesButton()));
 
     net = dnn::readNetFromCaffe("/home/diegopc/fcn/fcn.prototxt", "/home/diegopc/fcn/fcn.caffemodel");
 
     // save in each position in colors the color of the category in each line of the file fcn-colors.txt
-    std::ifstream file("/home/diegopc/fcn/fcn-colors.txt");
-    for (int i = 0; i < 21; i++)
-    {
-        std::string line;
-        std::getline(file, line);
-        std::stringstream ss(line);
-        std::string token;
 
-        std::getline(ss, token, ',');
-        colors[i].setRed(std::stoi(token));
-
-        std::getline(ss, token, ',');
-        colors[i].setGreen(std::stoi(token));
-
-        std::getline(ss, token, '\n');
-        colors[i].setBlue(std::stoi(token));
-    }
 
     timer.start(30);
 }
@@ -151,6 +136,7 @@ void MainWindow::on_loadImageButton_clicked()
     }
     else
     {
+        cap->release();
         colorImage = imread(fileName.toStdString());
         cvtColor(colorImage, grayImage, COLOR_BGR2GRAY);
         cvtColor(colorImage, colorImage, COLOR_BGR2RGB);
@@ -174,74 +160,79 @@ void MainWindow::on_loadImageButton_clicked()
 void MainWindow::on_segmentButton_clicked()
 {
     // convertir la greyimage a BGR
-    Mat greyImageBGR;
     Mat colorImageBGR;
-    if (ui->colorButton->isChecked())
+
+    cvtColor(colorImage, colorImageBGR, COLOR_RGB2BGR);
+
+    Mat blob = dnn::blobFromImage(colorImageBGR, 1.0, Size(320, 240), mean(colorImageBGR), false, false);
+    net.setInput(blob);
+    Mat output;
+    net.forward(output);
+    //for each pixel in the Mat output, set each pixel to the color of the category
+
+
+    Mat auximage;    
+    auximage = destColorImage.clone();
+    cvtColor(auximage, auximage, COLOR_RGB2BGR);
+
+    for (int i = 0; i < destColorImage.rows; i++)
     {
-        cvtColor(colorImage, colorImageBGR, COLOR_RGB2BGR);
-
-        Mat blob = dnn::blobFromImage(colorImageBGR, 1.0, Size(320, 240), mean(colorImageBGR), false, false);
-        net.setInput(blob);
-        Mat output;
-        net.forward(output);
-        //for each pixel in the Mat output, set each pixel to the color of the category
-
-        destColorImage.setTo(0);
-
-        for (int i = 0; i < destColorImage.rows; i++)
+        for (int j = 0; j < destColorImage.cols; j++)
         {
-            for (int j = 0; j < destColorImage.cols; j++)
+            //get the greater value from the output and save the index of the category
+            float bestValue=0.0;
+            int category=0;
+            for(int k = 0; k < 21; k++)
             {
-                //get the greater value from the output and save the index of the category
-                float bestValue=0.0;
-                int category=0;
-                for(int k = 0; k < 21; k++)
+                int idx[4] = {0, k, i, j};
+                if(output.at<float>(idx) > bestValue)
                 {
-                    int idx[4] = {0, k, i, j};
-                    if(output.at<float>(idx) > bestValue)
-                    {
-                        bestValue = output.at<float>(idx);
-                        category=k;
-                    }
+                    bestValue = output.at<float>(idx);
+                    category=k;
                 }
-
-                destColorImage.at<Vec3b>(i, j) = Vec3b(colors[category].red(), colors[category].green(), colors[category].blue());
             }
+
+            auximage.at<Vec3b>(i, j) = Vec3b(colors[category].red(), colors[category].green(), colors[category].blue());
         }
-
     }
-    else
+        cvtColor(auximage,destColorImage, COLOR_BGR2RGB);
+
+        cvtColor(auximage,destGrayImage, COLOR_BGR2GRAY);
+
+
+
+}
+
+void MainWindow::categoriesButton(){
+    std::ifstream file("/home/diegopc/fcn/fcn-colors.txt");
+    for (int i = 0; i < 21; i++)
     {
-        cvtColor(grayImage, greyImageBGR, COLOR_GRAY2RGB);
+        std::string line;
+        std::getline(file, line);
+        std::stringstream ss(line);
+        std::string token;
 
-        Mat blob = dnn::blobFromImage(greyImageBGR, 1.0, Size(320, 240), mean(colorImageBGR), false, false);
-        net.setInput(blob);
-        Mat output;
-        net.forward(output);
+        std::getline(ss, token, ',');
+        colors[i].setRed(std::stoi(token));
 
-        destGrayImage.setTo(0);
-        for (int i = 0; i < destGrayImage.rows; i++)
-        {
-            for (int j = 0; j < destGrayImage.cols; j++)
-            {
-                float bestValue=0.0;
-                int category=0;
-                for(int k = 0; k < 21; k++)
-                {
-                    int idx[4] = {0, k, i, j};
-                    if(output.at<float>(idx) > bestValue)
-                    {
-                        bestValue = output.at<float>(idx);
-                        category=k;
-                    }
-                }
+        std::getline(ss, token, ',');
+        colors[i].setGreen(std::stoi(token));
 
-                destGrayImage.at<Vec3b>(i, j) = Vec3b(colors[category].red(), colors[category].green(), colors[category].blue());
-            }
+        std::getline(ss, token, '\n');
+        colors[i].setBlue(std::stoi(token));
+
+        if(!categoriesDialog.listWidget->item(i)->checkState()){
+            colors[i].setRed(0);
+            colors[i].setGreen(0);
+            colors[i].setBlue(0);
         }
     }
 }
 
 void MainWindow::on_combineButton_clicked()
 {
+    // convertir la greyimage a BGR
+    Mat colorImageBGR;
+
+    cvtColor(colorImage, colorImageBGR, COLOR_RGB2BGR);
 }
