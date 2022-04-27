@@ -183,8 +183,6 @@ void MainWindow::on_segmentButton_clicked()
     auximage.create(ui->imageHeightSpinBox->value(),ui->imageWidthSpinBox->value(),CV_8UC3);
     //auximage = destColorImage.clone();
     //cvtColor(auximage, auximage, COLOR_RGB2BGR);
-    qDebug()<<auximage.rows;
-    qDebug()<<auximage.cols;
     for (int i = 0; i < auximage.rows; i++)
     {
         for (int j = 0; j < auximage.cols; j++)
