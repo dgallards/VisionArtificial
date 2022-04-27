@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     connect(categoriesDialog.okButton, SIGNAL(clicked()), &categoriesDialog, SLOT(hide()));
     connect(categoriesDialog.okButton, SIGNAL(clicked()), this, SLOT(categoriesButton()));
 
-    net = dnn::readNetFromCaffe("/home/diegopc/fcn/fcn.prototxt", "/home/diegopc/fcn/fcn.caffemodel");
+    net = dnn::readNetFromCaffe("/home/fcn/fcn.prototxt", "/home/fcn/fcn.caffemodel");
 
     // save in each position in colors the color of the category in each line of the file fcn-colors.txt
 
@@ -128,15 +128,23 @@ void MainWindow::deselectWindow(QPointF p)
 
 void MainWindow::on_loadImageButton_clicked()
 {
+
+    ui->captureButton->setChecked(false);
+    ui->captureButton->setText("Start capture");
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "/home", tr("Images (*.png *.xpm *.jpg *.jpeg)"));
 
     if (fileName.isEmpty())
     {
         QMessageBox::information(this, "Error", "No file selected");
+        ui->captureButton->setChecked(true);
+        ui->captureButton->setText("Stop capture");
     }
     else
     {
-        cap->release();
+        //cap->release();
+
+        //ui->captureButton->setText("Stop capture");
+
         colorImage = imread(fileName.toStdString());
         cvtColor(colorImage, grayImage, COLOR_BGR2GRAY);
         cvtColor(colorImage, colorImage, COLOR_BGR2RGB);
@@ -164,20 +172,22 @@ void MainWindow::on_segmentButton_clicked()
 
     cvtColor(colorImage, colorImageBGR, COLOR_RGB2BGR);
 
-    Mat blob = dnn::blobFromImage(colorImageBGR, 1.0, Size(320, 240), mean(colorImageBGR), false, false);
+    Mat blob = dnn::blobFromImage(colorImageBGR, 1.0, Size(ui->imageWidthSpinBox->value(), ui->imageHeightSpinBox->value()), mean(colorImageBGR), false, false);
     net.setInput(blob);
     Mat output;
     net.forward(output);
     //for each pixel in the Mat output, set each pixel to the color of the category
 
 
-    Mat auximage;    
-    auximage = destColorImage.clone();
-    cvtColor(auximage, auximage, COLOR_RGB2BGR);
-
-    for (int i = 0; i < destColorImage.rows; i++)
+    Mat auximage;
+    auximage.create(ui->imageHeightSpinBox->value(),ui->imageWidthSpinBox->value(),CV_8UC3);
+    //auximage = destColorImage.clone();
+    //cvtColor(auximage, auximage, COLOR_RGB2BGR);
+    qDebug()<<auximage.rows;
+    qDebug()<<auximage.cols;
+    for (int i = 0; i < auximage.rows; i++)
     {
-        for (int j = 0; j < destColorImage.cols; j++)
+        for (int j = 0; j < auximage.cols; j++)
         {
             //get the greater value from the output and save the index of the category
             float bestValue=0.0;
@@ -195,16 +205,23 @@ void MainWindow::on_segmentButton_clicked()
             auximage.at<Vec3b>(i, j) = Vec3b(colors[category].red(), colors[category].green(), colors[category].blue());
         }
     }
-        cvtColor(auximage,destColorImage, COLOR_BGR2RGB);
-
-        cvtColor(auximage,destGrayImage, COLOR_BGR2GRAY);
 
 
+    cv::resize(auximage, auximage, Size(320, 240), 0.0, 0.0, INTER_NEAREST);
+    int p = ui->categoryColorSlider->value();
+    float p_f = p/100.;
+    float d = 1 - p_f;
+
+    destColorImage = auximage * p_f + colorImage * d;
+    destGrayImage = auximage * p_f + colorImage * d;
+
+
+    cvtColor(destGrayImage,destGrayImage, COLOR_BGR2GRAY);
 
 }
 
 void MainWindow::categoriesButton(){
-    std::ifstream file("/home/diegopc/fcn/fcn-colors.txt");
+    std::ifstream file("/home/fcn/fcn-colors.txt");
     for (int i = 0; i < 21; i++)
     {
         std::string line;

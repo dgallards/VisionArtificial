@@ -57,6 +57,8 @@ public:
     OperOrderDialog(QDialog *parent=0) : QDialog(parent){
         setupUi(this);
     }
+private slots:
+    void on_okButton_clicked();
 };
 
 
@@ -109,6 +111,7 @@ private slots:
     void erode();
     void applySeveral();
     void negative();
+    void on_pixelTButton_clicked();
 };
 
 

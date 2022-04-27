@@ -468,3 +468,9 @@ void MainWindow::applySeveral(){
 
 }
 
+
+
+void MainWindow::on_pixelTButton_clicked()
+{
+
+}
