@@ -42,8 +42,8 @@ private:
     QTimer timer;
 
     VideoCapture *cap;
-    ImgViewer *visorS, * visorD;
-    Mat colorImage, grayImage, destColorImage, destGrayImage;
+    ImgViewer *visorS, * visorD, *visorSS, *visorDD;
+    Mat colorImage, grayImage, destColorImage, destGrayImage, destDispImage,groundTruthImage;
     Mat segmentedImage;
     bool winSelected;
     Rect imageWindow;

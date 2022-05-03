@@ -16,9 +16,13 @@ MainWindow::MainWindow(QWidget *parent) :
     grayImage.create(240,320,CV_8UC1);
     destColorImage.create(240,320,CV_8UC3);
     destGrayImage.create(240,320,CV_8UC1);
+    destDispImage.create(240,320,CV_8UC1);
+    groundTruthImage.create(240,320,CV_8UC1);
 
     visorS = new ImgViewer(&grayImage, ui->imageFrameS);
     visorD = new ImgViewer(&destGrayImage, ui->imageFrameD);
+    visorSS = new ImgViewer(&destDispImage, ui->imageFrameS_4);
+    visorDD = new ImgViewer(&groundTruthImage, ui->imageFrameS_6);
 
     segmentedImage.create(240,320,CV_32SC1);
 
@@ -71,6 +75,8 @@ void MainWindow::compute()
     }
     visorS->update();
     visorD->update();
+    visorDD->update();
+    visorSS->update();
 
 }
 
@@ -175,8 +181,8 @@ void MainWindow::colorSegmentedImage()
     for(int y=0; y<240; y++)
         for(int x=0; x<320; x++)
         {
-           id = segmentedImage.at<int>(y,x);
-           destGrayImage.at<uchar>(y,x) = regionsList[id].gray;
+            id = segmentedImage.at<int>(y,x);
+            destDispImage.at<uchar>(y,x) = regionsList[id].gray;
 
         }
 }
@@ -245,25 +251,41 @@ void MainWindow::loadImageFromFile()
     ui->captureButton->setText("Start capture");
     disconnect(&timer,SIGNAL(timeout()),this,SLOT(compute()));
 
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Load image from file"),".", tr("Images (*.png *.xpm *.jpg)"));
-    if(!fileName.isNull())
-    {
-        Mat imfromfile = imread(fileName.toStdString(), IMREAD_COLOR);
-        Size imSize = imfromfile.size();
-        if(imSize.width!=320 || imSize.height!=240)
-            cv::resize(imfromfile, imfromfile, Size(320, 240));
+    QStringList fileNames = QFileDialog::getOpenFileNames(this, tr("Load image from file"),"/home/fcn/P5", tr("Images (*.png *.xpm *.jpg)"));
+    int visor=0;
+    for (QString fileName : fileNames){
 
-        if(imfromfile.channels()==1)
+        if(!fileName.isNull()&&fileNames.size()>1)
         {
-            imfromfile.copyTo(grayImage);
-            cvtColor(grayImage,colorImage, COLOR_GRAY2RGB);
-        }
+            Mat imfromfile = imread(fileName.toStdString(), IMREAD_COLOR);
+            Size imSize = imfromfile.size();
+            if(imSize.width!=320 || imSize.height!=240)
+                cv::resize(imfromfile, imfromfile, Size(320, 240));
 
-        if(imfromfile.channels()==3)
-        {
-            imfromfile.copyTo(colorImage);
-            cvtColor(colorImage, colorImage, COLOR_BGR2RGB);
-            cvtColor(colorImage, grayImage, COLOR_RGB2GRAY);
+            if(imfromfile.channels()==1)
+            {
+                if(visor==0){
+                    imfromfile.copyTo(grayImage);
+                    cvtColor(grayImage,colorImage, COLOR_GRAY2RGB);
+                }else{
+                    imfromfile.copyTo(destGrayImage);
+                    cvtColor(destGrayImage,destColorImage, COLOR_GRAY2RGB);
+                }
+            }
+
+            if(imfromfile.channels()==3)
+            {
+                if(visor==0){
+                    imfromfile.copyTo(colorImage);
+                    cvtColor(colorImage, colorImage, COLOR_BGR2RGB);
+                    cvtColor(colorImage, grayImage, COLOR_RGB2GRAY);
+                }else{
+                    imfromfile.copyTo(destColorImage);
+                    cvtColor(destColorImage, destColorImage, COLOR_BGR2RGB);
+                    cvtColor(destColorImage, destGrayImage, COLOR_RGB2GRAY);
+                }
+            }
+            visor++;
         }
 
     }
