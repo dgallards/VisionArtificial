@@ -65,14 +65,25 @@ void MainWindow::compute()
 
     }
 
-    regionGrowing(grayImage);
 
-    colorSegmentedImage();
 
     if(winSelected)
     {
         visorS->drawSquare(QPointF(imageWindow.x+imageWindow.width/2, imageWindow.y+imageWindow.height/2), imageWindow.width,imageWindow.height, Qt::green );
     }
+
+
+    if(corners1.size()>0&&corners2.size()>0){
+        for(cv::Point2i corners : corners1){
+            this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+        }
+        for(cv::Point2i corners : corners2){
+            this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+        }
+    }
+
+
+
     visorS->update();
     visorD->update();
     visorDD->update();
@@ -294,4 +305,74 @@ void MainWindow::loadImageFromFile()
 
 }
 
+
+
+void MainWindow::on_LoadGround_pushButton_clicked()
+{
+    ui->captureButton->setChecked(false);
+    ui->captureButton->setText("Start capture");
+    disconnect(&timer,SIGNAL(timeout()),this,SLOT(compute()));
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load image from file"),"/home/fcn/P5", tr("Images (*.png *.xpm *.jpg)"));
+    if(!fileName.isNull())
+    {
+        Mat imfromfile = imread(fileName.toStdString(), IMREAD_COLOR);
+        Size imSize = imfromfile.size();
+        if(imSize.width!=320 || imSize.height!=240)
+            cv::resize(imfromfile, imfromfile, Size(320, 240));
+
+        if(imfromfile.channels()==1)
+        {
+            imfromfile.copyTo(groundTruthImage);
+            cvtColor(groundTruthImage,groundTruthImage, COLOR_GRAY2RGB);
+
+        }
+        if(imfromfile.channels()==3)
+        {
+            imfromfile.copyTo(groundTruthImage);
+            cvtColor(groundTruthImage, groundTruthImage, COLOR_BGR2RGB);
+        }
+    }
+    connect(&timer,SIGNAL(timeout()),this,SLOT(compute()));
+}
+
+
+void MainWindow::on_init_disparityButton_clicked()
+{
+
+
+    regionGrowing(grayImage);
+    colorSegmentedImage();
+
+    cv::goodFeaturesToTrack(destGrayImage,corners1,0,0.01,5);
+    cv::goodFeaturesToTrack(grayImage,corners2,0,0.01,5);
+
+    Mat fijos,resultado,cornersDerechaRepresentada;
+    fijos.create(240,320,CV_8UC1);
+    resultado.create(240,320,CV_32FC1);
+    //this image will be bitmap representation of the right corners
+    cornersDerechaRepresentada.create(240,320,CV_8UC1);
+
+    for(int i=0; i<corners2.size(); i++)
+    {
+        cornersDerechaRepresentada.at<uchar>(corners2[i].y,corners2[i].x) = 1;
+    }
+
+    for (Point2i corner : corners1 ) {
+        int row = corner.y;
+        //iterate over all columns with same row
+        for (int col = corner.x; col >9; col--) {
+            if(cornersDerechaRepresentada.at<uchar>(row,col)==1&&col>9&&row>9&&col<310&&row<230){
+                cv::matchTemplate(grayImage(Rect(corner.x-5,corner.y-5,9,9)),destGrayImage(Rect(col-5,corner.y-5,9,9)),resultado,TM_CCOEFF_NORMED);
+                if(resultado.at<float>(0,0)>0.9){
+                    fijos.at<uchar>(row,col)=1;
+                }
+            }
+        }
+    }
+resultado.copyTo(destDispImage);
+
+
+
+}
 

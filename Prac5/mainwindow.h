@@ -48,6 +48,7 @@ private:
     bool winSelected;
     Rect imageWindow;
     vector<RegSt> regionsList;
+    std::vector<cv::Point2i> corners1,corners2;
 
     void regionGrowing(Mat image);
     int copyRegion(Mat image, Mat maskImage, int id, Rect r, uchar & mgray);
@@ -61,6 +62,9 @@ public slots:
     void deselectWindow(QPointF p);
     void loadImageFromFile();
 
+private slots:
+    void on_LoadGround_pushButton_clicked();
+    void on_init_disparityButton_clicked();
 };
 
 
