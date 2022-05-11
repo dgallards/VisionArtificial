@@ -19,6 +19,14 @@ MainWindow::MainWindow(QWidget *parent) :
     destDispImage.create(240,320,CV_8UC1);
     groundTruthImage.create(240,320,CV_8UC1);
 
+    fijos.create(240,320,CV_8UC1);
+    fijosDch.create(240,320, CV_8UC1);
+    disparidadMap.create(240, 320, CV_32FC1);
+
+    fijos.setTo(0);
+    fijosDch.setTo(0);
+    disparidadMap.setTo(0);
+
     visorS = new ImgViewer(&grayImage, ui->imageFrameS);
     visorD = new ImgViewer(&destGrayImage, ui->imageFrameD);
     visorSS = new ImgViewer(&destDispImage, ui->imageFrameS_4);
@@ -29,8 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&timer,SIGNAL(timeout()),this,SLOT(compute()));
     connect(ui->captureButton,SIGNAL(clicked(bool)),this,SLOT(start_stop_capture(bool)));
     connect(ui->colorButton,SIGNAL(clicked(bool)),this,SLOT(change_color_gray(bool)));
-    connect(visorS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
-    connect(visorS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
+    connect(visorSS,SIGNAL(mouseSelection(QPointF, int, int)),this,SLOT(selectWindow(QPointF, int, int)));
+    connect(visorSS,SIGNAL(mouseClic(QPointF)),this,SLOT(deselectWindow(QPointF)));
     connect(ui->loadButton,SIGNAL(clicked()),this,SLOT(loadImageFromFile()));
     timer.start(60);
 
@@ -74,12 +82,29 @@ void MainWindow::compute()
 
 
     if(corners1.size()>0&&corners2.size()>0){
-        for(cv::Point2i corners : corners1){
-            this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
-        }
         for(cv::Point2i corners : corners2){
-            this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+            if (fijosDch.at<uchar>(corners.y, corners.x) == 1)
+                this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+            else
+                this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
         }
+        for(cv::Point2i corners : corners1){
+            if (fijos.at<uchar>(corners.y,corners.x) == 1)
+                this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+            else
+                this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
+        }
+        //        for (int i = 0; i < 320; i++){
+        //            for (int j = 0; j < 240; j++){
+        //                if (fijos.at<uchar>(i,j) == 1){
+        //                    this->visorD->drawText(QPoint(i,j),"×",10,Qt::green);
+
+        //                }
+        //                if (fijosDch.at<uchar>(i,j) == 1){
+        //                    this->visorS->drawText(QPoint(i,j),"×",10,Qt::green);
+        //                }
+        //            }
+        //        }
     }
 
 
@@ -113,7 +138,9 @@ void MainWindow::regionGrowing(Mat image)
             if(segmentedImage.at<int>(y,x)==-1 && edges.at<uchar>(y,x)==0)
             {
                 newReg.gray=image.at<uchar>(y,x);
-
+                newReg.nfijos = 0;
+                newReg.media = 0.0;
+                newReg.total = 0.0;
                 Rect winReg;
 
                 floodFill(image, maskImage, Point(x,y),Scalar(1),&winReg, thresh,thresh,  FLOODFILL_MASK_ONLY| 4 | ( 1 << 8 ) );
@@ -193,7 +220,7 @@ void MainWindow::colorSegmentedImage()
         for(int x=0; x<320; x++)
         {
             id = segmentedImage.at<int>(y,x);
-            destDispImage.at<uchar>(y,x) = regionsList[id].gray;
+            //destDispImage.at<uchar>(y,x) = regionsList[id].gray;
 
         }
 }
@@ -254,6 +281,9 @@ void MainWindow::deselectWindow(QPointF p)
     std::ignore = p;
     winSelected = false;
 
+    ui->lcdNumber->setDigitCount(destDispImage.at<uchar>(p.y(), p.x()));
+    ui->lcdNumber_2->setDigitCount(groundTruthImage.at<uchar>(p.y(), p.x()));
+
 }
 
 void MainWindow::loadImageFromFile()
@@ -269,6 +299,7 @@ void MainWindow::loadImageFromFile()
         if(!fileName.isNull()&&fileNames.size()>1)
         {
             Mat imfromfile = imread(fileName.toStdString(), IMREAD_COLOR);
+            ancho=imfromfile.cols;
             Size imSize = imfromfile.size();
             if(imSize.width!=320 || imSize.height!=240)
                 cv::resize(imfromfile, imfromfile, Size(320, 240));
@@ -339,16 +370,18 @@ void MainWindow::on_LoadGround_pushButton_clicked()
 
 void MainWindow::on_init_disparityButton_clicked()
 {
-
+    fijos.setTo(0);
+    fijosDch.setTo(0);
+    disparidadMap.setTo(0);
 
     regionGrowing(grayImage);
     colorSegmentedImage();
 
-    cv::goodFeaturesToTrack(destGrayImage,corners1,0,0.01,5);
-    cv::goodFeaturesToTrack(grayImage,corners2,0,0.01,5);
+    cv::goodFeaturesToTrack(grayImage, corners1, 0, 0.01, 5);
+    cv::goodFeaturesToTrack(destGrayImage, corners2, 0, 0.01, 5);
 
-    Mat fijos,resultado,cornersDerechaRepresentada;
-    fijos.create(240,320,CV_8UC1);
+    Mat resultado,cornersDerechaRepresentada;
+
     resultado.create(240,320,CV_32FC1);
     //this image will be bitmap representation of the right corners
     cornersDerechaRepresentada.create(240,320,CV_8UC1);
@@ -360,19 +393,56 @@ void MainWindow::on_init_disparityButton_clicked()
 
     for (Point2i corner : corners1 ) {
         int row = corner.y;
+        int bestX = 0;
+        int bestY = 0;
+        float bestVal = -1;
         //iterate over all columns with same row
-        for (int col = corner.x; col >9; col--) {
-            if(cornersDerechaRepresentada.at<uchar>(row,col)==1&&col>9&&row>9&&col<310&&row<230){
-                cv::matchTemplate(grayImage(Rect(corner.x-5,corner.y-5,9,9)),destGrayImage(Rect(col-5,corner.y-5,9,9)),resultado,TM_CCOEFF_NORMED);
-                if(resultado.at<float>(0,0)>0.9){
-                    fijos.at<uchar>(row,col)=1;
+        if (corner.x>=9 && corner.y>=9 && corner.x<=310 && corner.y<=230){
+            for (int col = corner.x; col >=9; col--) {
+                if(cornersDerechaRepresentada.at<uchar>(row,col)==1 && col>9 && row>9 && col<310 && row<230){
+                    cv::matchTemplate(grayImage(Rect(corner.x-5,corner.y-5,11,11)),destGrayImage(Rect(col-5,corner.y-5,11,11)),resultado,TM_CCOEFF_NORMED);
+
+                    if (resultado.at<float>(0,0) > bestVal){
+                        bestVal = resultado.at<float>(0,0);
+                        bestY = row;
+                        bestX = col;
+                    }
                 }
+            }
+            if(bestVal>0.95){
+                fijos.at<uchar>(corner.y,corner.x)=1;
+                fijosDch.at<uchar>(bestY,bestX)=1;
+                disparidadMap.at<float>(corner.y, corner.x) = (corner.x - bestX);
             }
         }
     }
-resultado.copyTo(destDispImage);
+    for (int x = 0; x < 320; x++){
+        for(int y = 0; y < 240; y++){
+            if (fijos.at<uchar>(y, x) > 0){
+                regionsList[segmentedImage.at<int>(y, x)].nfijos++;
+                regionsList[segmentedImage.at<int>(y, x)].total += disparidadMap.at<float>(y, x);
+                regionsList[segmentedImage.at<int>(y, x)].media = regionsList[segmentedImage.at<int>(y, x)].total / regionsList[segmentedImage.at<int>(y, x)].nfijos++;
+            }
+        }
+    }
+    for (int x = 0; x < 320; x++){
+        for(int y = 0; y < 240; y++){
+            if (fijos.at<uchar>(y, x) == 0){
+                disparidadMap.at<float>(y, x) = regionsList[segmentedImage.at<int>(y, x)].media;
+            }
+        }
+    }
 
+    for(int y=0; y<240; y++)
+        for(int x=0; x<320; x++)
+        {
+            float aux = 3*disparidadMap.at<float>(y,x)*ancho / 320;
+            if (aux < 256){
+                destDispImage.at<uchar>(y,x) = (uchar) aux;
+            }else{
+                destDispImage.at<uchar>(y,x) = (uchar) 255;
+            }
 
-
+        }
 }
 

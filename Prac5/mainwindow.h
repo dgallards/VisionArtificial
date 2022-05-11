@@ -23,6 +23,10 @@ using namespace std;
 typedef struct{
     uchar gray;
     int npoints;
+
+    int nfijos;
+    float total;
+    float media;
 }RegSt;
 
 namespace Ui {
@@ -45,10 +49,14 @@ private:
     ImgViewer *visorS, * visorD, *visorSS, *visorDD;
     Mat colorImage, grayImage, destColorImage, destGrayImage, destDispImage,groundTruthImage;
     Mat segmentedImage;
+    Mat fijos, fijosDch;
+    Mat disparidadMap;
     bool winSelected;
     Rect imageWindow;
     vector<RegSt> regionsList;
+    int ancho = 0;
     std::vector<cv::Point2i> corners1,corners2;
+    std::vector<cv::Point2i> pFijosIzq,pFijosDch;
 
     void regionGrowing(Mat image);
     int copyRegion(Mat image, Mat maskImage, int id, Rect r, uchar & mgray);
