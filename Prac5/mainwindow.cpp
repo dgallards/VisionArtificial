@@ -281,8 +281,8 @@ void MainWindow::deselectWindow(QPointF p)
     std::ignore = p;
     winSelected = false;
 
-    ui->lcdNumber->setDigitCount(destDispImage.at<uchar>(p.y(), p.x()));
-    ui->lcdNumber_2->setDigitCount(groundTruthImage.at<uchar>(p.y(), p.x()));
+    ui->lcdNumber->display((int)destDispImage.at<uchar>(p.y(), p.x()));
+    ui->lcdNumber_2->display((int)groundTruthImage.at<uchar>(p.y(), p.x()));
 
 }
 
