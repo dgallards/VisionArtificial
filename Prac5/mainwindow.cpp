@@ -80,7 +80,7 @@ void MainWindow::compute()
         visorS->drawSquare(QPointF(imageWindow.x+imageWindow.width/2, imageWindow.y+imageWindow.height/2), imageWindow.width,imageWindow.height, Qt::green );
     }
 
-
+    if (ui->keypoints_checkBox->checkState()){
     if(corners1.size()>0&&corners2.size()>0){
         for(cv::Point2i corners : corners2){
             if (fijosDch.at<uchar>(corners.y, corners.x) == 1)
@@ -94,6 +94,7 @@ void MainWindow::compute()
             else
                 this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
         }
+    }
         //        for (int i = 0; i < 320; i++){
         //            for (int j = 0; j < 240; j++){
         //                if (fijos.at<uchar>(i,j) == 1){
@@ -385,7 +386,7 @@ void MainWindow::on_init_disparityButton_clicked()
     resultado.create(240,320,CV_32FC1);
     //this image will be bitmap representation of the right corners
     cornersDerechaRepresentada.create(240,320,CV_8UC1);
-
+    cornersDerechaRepresentada.setTo(0);
     for(int i=0; i<corners2.size(); i++)
     {
         cornersDerechaRepresentada.at<uchar>(corners2[i].y,corners2[i].x) = 1;
@@ -421,7 +422,7 @@ void MainWindow::on_init_disparityButton_clicked()
             if (fijos.at<uchar>(y, x) > 0){
                 regionsList[segmentedImage.at<int>(y, x)].nfijos++;
                 regionsList[segmentedImage.at<int>(y, x)].total += disparidadMap.at<float>(y, x);
-                regionsList[segmentedImage.at<int>(y, x)].media = regionsList[segmentedImage.at<int>(y, x)].total / regionsList[segmentedImage.at<int>(y, x)].nfijos++;
+                regionsList[segmentedImage.at<int>(y, x)].media = regionsList[segmentedImage.at<int>(y, x)].total / regionsList[segmentedImage.at<int>(y, x)].nfijos;
             }
         }
     }
