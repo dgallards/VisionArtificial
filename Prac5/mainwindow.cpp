@@ -81,20 +81,20 @@ void MainWindow::compute()
     }
 
     if (ui->keypoints_checkBox->checkState()){
-    if(corners1.size()>0&&corners2.size()>0){
-        for(cv::Point2i corners : corners2){
-            if (fijosDch.at<uchar>(corners.y, corners.x) == 1)
-                this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
-            else
-                this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
+        if(corners1.size()>0&&corners2.size()>0){
+            for(cv::Point2i corners : corners2){
+                if (fijosDch.at<uchar>(corners.y, corners.x) == 1)
+                    this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+                else
+                    this->visorD->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
+            }
+            for(cv::Point2i corners : corners1){
+                if (fijos.at<uchar>(corners.y,corners.x) == 1)
+                    this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
+                else
+                    this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
+            }
         }
-        for(cv::Point2i corners : corners1){
-            if (fijos.at<uchar>(corners.y,corners.x) == 1)
-                this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::green);
-            else
-                this->visorS->drawText(QPoint(corners.x,corners.y),"×",10,Qt::red);
-        }
-    }
         //        for (int i = 0; i < 320; i++){
         //            for (int j = 0; j < 240; j++){
         //                if (fijos.at<uchar>(i,j) == 1){
@@ -410,7 +410,7 @@ void MainWindow::on_init_disparityButton_clicked()
                     }
                 }
             }
-            if(bestVal>0.95){
+            if(bestVal>0.8){
                 fijos.at<uchar>(corner.y,corner.x)=1;
                 fijosDch.at<uchar>(bestY,bestX)=1;
                 disparidadMap.at<float>(corner.y, corner.x) = (corner.x - bestX);
